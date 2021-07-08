@@ -4,16 +4,22 @@
 # especially the firewall stuff
 
 VERSION=5.10.24-11676
+VERSION=5.12.35-12979
+VERSION=5.12.66-13102
+VERSION=5.13.32-13646
+VERSION=6.0.45-14358
+VERSION=6.1.71-15061
 
 alien -r unifi_sysvinit_all.deb --target=x86_64 --generate --scripts --verbose
-yum install apache-commons-daemon-jsvc
-yum install redhat-lsb
-yum install java-1.8.0-openjdk
-yum install java-1.8.0-openjdk
-yum install apache-commons-daemon
-yum install mongodb-server
 
-#useradd -r unifi
+yum -y install apache-commons-daemon-jsvc
+yum -y install redhat-lsb
+yum -y install java-1.8.0-openjdk
+yum -y install java-1.8.0-openjdk
+yum -y install apache-commons-daemon
+yum -y install mongodb-server
+
+useradd -r unifi
 
 mkdir -p /opt/unifi/usr/lib
 mkdir -p /opt/unifi/usr/share/doc
@@ -23,6 +29,12 @@ cp -r unifi-${VERSION}/usr/share/doc/unifi /opt/unifi/usr/share/doc/unifi
 
 TMPFILE=`mktemp`
 sed -e "s#^BASEDIR=\"/usr/lib/unifi\"#BASEDIR=\"/opt/unifi/usr/lib/unifi\"#g" unifi-${VERSION}/usr/lib/unifi/bin/unifi.init > $TMPFILE
+cp $TMPFILE /opt/unifi/usr/lib/unifi/bin/unifi.init
+
+head -1 /opt/unifi/usr/lib/unifi/bin/unifi.init > $TMPFILE
+echo "mkdir -p /var/run/unifi" >> $TMPFILE
+echo "chown -R unifi:unifi /var/run/unifi" >> $TMPFILE
+tail -n +2 /opt/unifi/usr/lib/unifi/bin/unifi.init >> $TMPFILE
 cp $TMPFILE /opt/unifi/usr/lib/unifi/bin/unifi.init
 
 sed -e "s#^\. /lib/lsb/init-functions#\. /etc/init.d/functions#g" /opt/unifi/usr/lib/unifi/bin/unifi.init > $TMPFILE
@@ -52,6 +64,9 @@ chown -R unifi:unifi /opt/unifi
 
 mkdir -p /var/lib/unifi /var/log/unifi /var/run/unifi
 chown -R unifi:unifi /var/lib/unifi /var/log/unifi /var/run/unifi
+
+mkdir -p /var/run/unifi
+chown unifi:unifi /var/run/unifi
 
 cp unifi-${VERSION}/etc/pam.d/unifi /etc/pam.d/unifi
 
